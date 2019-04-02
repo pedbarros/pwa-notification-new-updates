@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>PWA - Novo Service Worker disponível</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+      }
+      #notification {
+        background: #444;
+        bottom: 8px;
+        color: #fff;
+        display: none;
+        padding: 16px;
+        position: absolute;
+        right: 8px;
+        width: 240px;
+      }
+      #notification.show {
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body>
+    <img src="./dog.jpg" />
+    <!-- A notificação que iremos mostrar -->
+    <div id="notification">
+      Uma nova versão está disponível. Clique <a id="reload">aqui</a> para
+      atualizar.
+    </div>
+  </body>
+<script>
+let newWorker;
+
+// O evento de clique na notificação
+document.getElementById("reload").addEventListener("click", function() {
+  newWorker.postMessage({ action: "skipWaiting" });
+});
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("./service-worker.js") // [A]
+    .then(function(registration) {
+      registration.addEventListener("updatefound", () => { // [B]
+        // Uma atualização no Service Worker foi encontrada, instalando...
+        newWorker = registration.installing; 
+ 
+        console.log(newWorker)
+
+        newWorker.addEventListener("statechange", () => {
+          // O estado do Service Worker mudou?
+          switch (newWorker.state) {
+            case "installed": {
+              // Existe um novo Service Worker disponível, mostra a notificação
+              if (navigator.serviceWorker.controller) {
+                let notification = document.getElementById("notification");
+                notification.className = "show";
+                break;
+              }
+            }
+          }
+        });
+      });
+
+      // SUCESSO - ServiceWorker Registrado
+      console.log(
+        "ServiceWorker registrado com sucesso no escopo: ",
+        registration.scope
+      );
+    })
+    .catch(function(err) {
+      // ERRO - Falha ao registrar o ServiceWorker
+      console.log("Falha ao registrar o ServiceWorker: ", err);
+    });
+}
+</script>
+
+  <!--<script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("./service-worker.js")
+        .then(function(registration) {
+          // SUCESSO - ServiceWorker Registrado
+          console.log(
+            "ServiceWorker registrado com sucesso no escopo: ",
+            registration.scope
+          );
+        })
+        .catch(function(err) {
+          // ERRO - Falha ao registrar o ServiceWorker
+          console.log("Falha ao registrar o ServiceWorker: ", err);
+        });
+    }
+  </script> -->
+</html>
